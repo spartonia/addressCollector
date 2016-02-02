@@ -323,18 +323,5 @@ if __name__ == '__main__':
     stockholm_vill_feed_url = 'http://www.hemnet.se/mitt_hemnet/sparade_sokningar/9201235.xml'
     # update_links(stockholm_vill_feed_url)
     # hemnet_url = 'http://www.hemnet.se/bostad/villa-4rum-idre-kyrkby-alvdalens-kommun-kvarnvagen-5-8678962'
-    
-    # # session.query(Apartment).delete()
-    # # session.commit()
-    # # import ipdb; ipdb.set_trace()
-    # print('*' * 40)
-    # session = DBSession()
-    # apts = session.query(Apartment).all()
-    # for i in apts:
-    #     # if i.kommun == u'ÖStockholm':
-    #     print (i.link_id, i.kommun)
-    #
-
-
 
 
