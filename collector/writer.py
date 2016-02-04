@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import os
 import random
+import locale
 
 from datetime import datetime, timedelta
 from sqlalchemy.sql.expression import func, and_
@@ -11,6 +12,8 @@ from docx.shared import Inches, Pt
 from dateutil import parser as date_parser
 
 from models import DBSession, Apartment, Link
+
+locale.setlocale(locale.LC_ALL, 'sv_SE.utf8')
 
 
 def write_to_one_file(
@@ -24,6 +27,21 @@ def write_to_one_file(
     file_save_name=None,
     save_path='.'
 ):
+    """
+    Creates a marketing letter (docx) for a customer with given data
+    Parameters
+    ----------
+    coupon : str
+    coupon_expiry : str
+    customer_name : str
+    customer_formal_address : str
+    coupon_value : int
+    min_order_value : int
+    doc_template : str
+    file_save_name : str|None
+    save_path : str
+
+    """
 
     tell = '070-612 55 55'
     if len(customer_name) > 25:
@@ -31,8 +49,8 @@ def write_to_one_file(
         customer_name = name_split[0] + ' ' + name_split[-1]
     customer_name = customer_name
     address_split = customer_formal_address.split(',')
-    customer_address = address_split[0]  # u'Karlavägen 68'
-    customer_zip_city = address_split[1]  # u'11 459 Stockholm'
+    customer_address = address_split[0].strip()  # u'Karlavägen 68'
+    customer_zip_city = address_split[1].strip()  # u'11 459 Stockholm'
     if file_save_name is None:
         file_save_name = coupon + '.docx'
 
@@ -40,7 +58,7 @@ def write_to_one_file(
     tbl1 = document.tables[0]
     col1 = tbl1.columns[0]
 
-    cpn_box_val_run = col1.cells[0].paragraphs[0].add_run(str(coupon_value) + ' kr*')
+    cpn_box_val_run = col1.cells[0].paragraphs[0].add_run(str(coupon_value) + ' kr')
     cpn_box_val_font = cpn_box_val_run.font
     cpn_box_val_font.size = Pt(54)
     coupon_val = col1.cells[2].paragraphs[0].add_run(coupon)
@@ -61,47 +79,44 @@ def write_to_one_file(
     for par in pars:
         par.paragraph_format.right_indent = Inches(-1.3)
 
-    p7 = pars[7]
-    p7_appended = p7.add_run(
+    p9 = pars[9]
+    p9_appended = p9.add_run(
         u'Vi har bifogat en kupong med värde {value} kr som en välkomstgåva för din bokning med cleanJoy.se.'.format(
             value=coupon_value
         ),
     )
 
-    p17 = pars[17]
-    p17_appended = p17.add_run(
-        u'Bok en flyttstädning idag och få {value} kr rabatt på beställningarna ovan {max_value} kr. Erbjudandet gäller till den {expiry}.'
+    p19 = pars[19]
+    p19_appended = p19.add_run(
+        u'Boka en flyttstädning idag och få {value} kr rabatt på beställningar över {max_value} kr. Erbjudandet gäller till den {expiry}.'
         .format(
             value=coupon_value,
             expiry=coupon_expiry,
             max_value=min_order_value
         )
     )  # bold
-    p17_appended_font = p17_appended.font
-    p17_appended_font.bold = True
+    p19_appended_font = p19_appended.font
+    p19_appended_font.bold = True
 
-    p18 = pars[18]
-    p18_appended = p18.add_run(
-        u'Ring vår kundtjänst på {tell} så hjälper de dig med frågor angående bokningen och tjänsten. Eller gå till '.format(
+    p20 = pars[20]
+    p20_appended = p20.add_run(
+        u'Ring vår kundtjänst på {tell} så hjälper de dig med frågor angående bokning och tjänster. Eller gå direct till '.format(
             tell=tell
         )
     )
-    p18_appended = p18.add_run(
+    p20_appended = p20.add_run(
         u'cleanjoy.se/aktivera'
     )
-    p18_appended_font = p18_appended.font
-    p18_appended_font.underline = True
-    p18_appended = p18.add_run(
+    p20_appended_font = p20_appended.font
+    p20_appended_font.underline = True
+    p18_appended = p20.add_run(
         u' för att boka din städning.'
     )
 
-
-    p25 = pars[25]
-    p25_appended = p25.add_run(
-        u'Erbjudandet med {value} kr rabatt på din bokning (ovan {min_order_value} kr) går ut den {expiry}.'.format(
-           value=coupon_value,
-            expiry=coupon_expiry,
-            min_order_value=min_order_value
+    p27 = pars[27]
+    p27_appended = p27.add_run(
+        u'Erbjudandet gäller t.o.m {expiry}.'.format(
+            expiry=date_parser.parse(coupon_expiry).date().strftime('%d %M %Y')
         )
     )
     save_path_name = os.path.join(
@@ -199,16 +214,18 @@ def write_to_file(
     for i, apt in enumerate(apts):
         coupon_code = generate_coupon_code()
         expiry = str(datetime.now().date() + timedelta(days=120))
+        coupon_value = 500
         print(apt.owner)
         try:
             write_to_one_file(
                 coupon=coupon_code,
                 coupon_expiry=expiry,
+                coupon_value=coupon_value,
                 customer_name=apt.owner,
                 customer_formal_address=apt.formal_address,
                 save_path=save_path_reporting_day_collected_day
             )
-            log_data = coupon_code + ';' + expiry
+            log_data = coupon_code + ';' + expiry + ';' + str(coupon_value)
             log_coupons(
                 reporting_day_save_path,
                 data=log_data
@@ -220,9 +237,9 @@ def write_to_file(
             except Exception as e:
                 print(e.message)
                 session = DBSession()
-        except:
+        except Exception as e:
             print('Error creating letter for', apt.formal_address, ',', apt.owner, coupon_code, expiry)
-
+            print('Error message:', e.message)
     print('Done!')
     print(file_count, 'letters created.')
 
