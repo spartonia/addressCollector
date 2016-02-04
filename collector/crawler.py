@@ -321,7 +321,7 @@ def update_links(
 
 if __name__ == '__main__':
     stockholm_vill_feed_url = 'http://www.hemnet.se/mitt_hemnet/sparade_sokningar/9201235.xml'
-    # update_links(stockholm_vill_feed_url)
+    update_links(stockholm_vill_feed_url)
     # hemnet_url = 'http://www.hemnet.se/bostad/villa-4rum-idre-kyrkby-alvdalens-kommun-kvarnvagen-5-8678962'
 
 
