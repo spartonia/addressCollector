@@ -151,7 +151,8 @@ def write_to_file(
     published_days_ago=30,
     date_info_collected=str((datetime.now().date() - timedelta(days=-1))),  # yesterday
     price_range=(0, 20000000),
-    living_area_range=(0, 500)
+    living_area_range=(0, 500),
+    merge_to_pdf=True
 ):
     # TODO: add county selection option
     """
@@ -164,6 +165,7 @@ def write_to_file(
     date_info_collected: str 'YYYY-mm-dd'
     price_range: (int, int)
     living_area_range: (int, int)
+    merge_to_pdf : bool
 
     """
     reporting_day_save_path = os.path.join(
@@ -173,12 +175,12 @@ def write_to_file(
     if not os.path.exists(reporting_day_save_path):
         os.makedirs(reporting_day_save_path)
 
-    save_path_reporting_day = os.path.join(
+    save_path_reporting_day_collected_day = os.path.join(
         reporting_day_save_path,
         date_info_collected
     )
-    if not os.path.exists(save_path_reporting_day):
-        os.mkdir(save_path_reporting_day)
+    if not os.path.exists(save_path_reporting_day_collected_day):
+        os.mkdir(save_path_reporting_day_collected_day)
 
     date_collected = date_parser.parse(date_info_collected).date()
     session = DBSession()
@@ -196,7 +198,7 @@ def write_to_file(
     file_count = 0
     for i, apt in enumerate(apts):
         coupon_code = generate_coupon_code()
-        expiry = str(datetime.now().date() + timedelta(days=60))
+        expiry = str(datetime.now().date() + timedelta(days=120))
         print(apt.owner)
         try:
             write_to_one_file(
@@ -204,7 +206,7 @@ def write_to_file(
                 coupon_expiry=expiry,
                 customer_name=apt.owner,
                 customer_formal_address=apt.formal_address,
-                save_path=save_path_reporting_day
+                save_path=save_path_reporting_day_collected_day
             )
             log_data = coupon_code + ';' + expiry
             log_coupons(

@@ -11,3 +11,8 @@ if __name__ == '__main__':
 
     write_to_file(date_info_collected='2016-02-04')
 
+    # convert files to pdf
+    # $ cd to-path
+    # $ lowriter --convert-to pdf *.docx
+    # then merge pdfs into one file
+    # $ pdftk `ls *.pdf` cat output merged.pdf
