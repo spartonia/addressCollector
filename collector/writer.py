@@ -15,7 +15,6 @@ from models import DBSession, Apartment, Link
 
 locale.setlocale(locale.LC_ALL, 'sv_SE.utf8')
 
-
 def write_to_one_file(
     coupon,
     coupon_expiry,
@@ -112,11 +111,10 @@ def write_to_one_file(
     p18_appended = p20.add_run(
         u' för att boka din städning.'
     )
-
     p27 = pars[27]
     p27_appended = p27.add_run(
         u'Erbjudandet gäller t.o.m {expiry}.'.format(
-            expiry=date_parser.parse(coupon_expiry).date().strftime('%d %M %Y')
+            expiry=date_parser.parse(coupon_expiry).date().strftime('%d %B %Y')
         )
     )
     save_path_name = os.path.join(
@@ -200,7 +198,7 @@ def write_to_file(
     date_collected = date_parser.parse(date_info_collected).date()
     session = DBSession()
     apts = session.query(Apartment).join(Link).filter(
-        Apartment.processed.isnot(True),
+        # Apartment.processed.isnot(True),
         Apartment.owner.isnot(None),
         and_(Apartment.price >= price_range[0], Apartment.price <= price_range[1]),
         and_(Apartment.living_area >= living_area_range[0], Apartment.living_area <= living_area_range[1]),
