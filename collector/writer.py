@@ -42,7 +42,7 @@ def write_to_one_file(
 
     """
 
-    tell = '070-322 55 55'
+    tell = '070-932 55 55'
     if len(customer_name) > 25:
         name_split = customer_name.split(' ')
         customer_name = name_split[0] + ' ' + name_split[-1]
