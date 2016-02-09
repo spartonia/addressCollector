@@ -42,7 +42,7 @@ def write_to_one_file(
 
     """
 
-    tell = '070-612 55 55'
+    tell = '070-322 55 55'
     if len(customer_name) > 25:
         name_split = customer_name.split(' ')
         customer_name = name_split[0] + ' ' + name_split[-1]
@@ -198,7 +198,7 @@ def write_to_file(
     date_collected = date_parser.parse(date_info_collected).date()
     session = DBSession()
     apts = session.query(Apartment).join(Link).filter(
-        # Apartment.processed.isnot(True),
+        Apartment.processed.isnot(True),
         Apartment.owner.isnot(None),
         and_(Apartment.price >= price_range[0], Apartment.price <= price_range[1]),
         and_(Apartment.living_area >= living_area_range[0], Apartment.living_area <= living_area_range[1]),
