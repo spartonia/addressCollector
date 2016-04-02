@@ -25,6 +25,7 @@ from sqlalchemy.sql import desc
 from bs4 import BeautifulSoup, UnicodeDammit
 from sqlalchemy.exc import IntegrityError
 
+
 from models import DBSession, Link, Apartment
 
 import warnings
@@ -272,56 +273,37 @@ def update_links(
     num_new_links = 0
 
     print('Updating liks database ..')
-
-    session = DBSession()
-    url_rs = session.query(Link.url)
-    url_list = [url for (url,) in url_rs]
-    session.close()
-
-    session = DBSession()
+    result_set = []
     browser = logged_in_browser()
     for cnt, entry in enumerate(entries):
         link = entry['link']
-        published_str = entry['published']
         print(cnt, ':', link)
-        if link in url_list:
-            print('duplicate url, passing..')
-            continue
-        published = date_parser.parse(published_str)
-        pubDate = datetime.fromordinal(published.toordinal())
 
-        new_link = Link(url=link, date=pubDate)
-        session.add(new_link)
         time.sleep(random.choice(range(20, 60))/10)
         try:
-            data = crawl_hemnet_page(new_link.url, browser=browser)
+            data = crawl_hemnet_page(link, browser=browser)
+            data.update({'link': link})
+            num_new_links += 1
         except Exception as e:
             print('Error crawling hemnet page.', e.message)
             continue
-        new_apt = Apartment(**data)
-        new_apt.link = new_link
-        session.add(new_apt)
-
-        try:
-            session.commit()
-            num_new_links += 1
-        except IntegrityError as e:
-            print(e.message)
-            print(link)
-            session.rollback()
-        except Exception as e:
-            print(e.message)
-            session.rollback()
-        finally:
-            session = DBSession()
+        if num_new_links == 10:
+            break
+        result_set.append(data)
 
     print('Done!')
     print('%s new links added.' % num_new_links)
+    return result_set
 
 
 if __name__ == '__main__':
     stockholm_vill_feed_url = 'http://www.hemnet.se/mitt_hemnet/sparade_sokningar/9201235.xml'
-    update_links(stockholm_vill_feed_url)
-    # hemnet_url = 'http://www.hemnet.se/bostad/villa-4rum-idre-kyrkby-alvdalens-kommun-kvarnvagen-5-8678962'
+    # update_links(stockholm_vill_feed_url)
+    hemnet_url = 'http://www.hemnet.se/bostad/villa-5rum-adelso-ekero-kommun-marielundsvagen-87-8975943'
+    br = logged_in_browser()
+    rs = crawl_hemnet_page(hemnet_url, browser=br)
+    from pprint import pprint
+    pprint(rs)
+
 
 
